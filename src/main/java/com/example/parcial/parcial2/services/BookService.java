@@ -7,10 +7,7 @@ import com.example.parcial.parcial2.domain.entities.Genre;
 import com.example.parcial.parcial2.repositories.BookRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,7 +23,7 @@ public class BookService {
         Book book = new Book();
         book.setTitle(dto.getTitle());
         book.setAuthor(dto.getAuthor());
-        book.setGenre(Genre.valueOf(dto.getGenre()));
+        book.setGenre(parseGenre(dto.getGenre()));
         book.setIsbn(dto.getIsbn());
         book.setAvailable(dto.isAvailable());
         book.setAvailableCount(dto.getAvailableCount());
@@ -40,12 +37,15 @@ public class BookService {
     }
 
     public List<Book> getAllBooks(String author, String genre) {
-        if (author != null && genre != null) {
-            return bookRepository.findByAuthorAndGenre(genre, author);
-        } else if (author != null) {
-            return bookRepository.findByAuthor(author);
-        } else if (genre != null) {
-            return bookRepository.findByGenre(Genre.valueOf(genre));
+        String normalizedAuthor = normalizeText(author);
+        Genre normalizedGenre = parseGenre(genre);
+
+        if (normalizedAuthor != null && normalizedGenre != null) {
+            return bookRepository.findByAuthorAndGenre(normalizedAuthor, normalizedGenre);
+        } else if (normalizedAuthor != null) {
+            return bookRepository.findByAuthor(normalizedAuthor);
+        } else if (normalizedGenre != null) {
+            return bookRepository.findByGenre(normalizedGenre);
         }
         return bookRepository.findAll();
     }
@@ -56,7 +56,7 @@ public class BookService {
         book.setTitle(dto.getTitle());
         book.setAuthor(dto.getAuthor());
         if (dto.getGenre() != null) {
-            book.setGenre(Genre.valueOf(dto.getGenre().toUpperCase()));
+            book.setGenre(parseGenre(dto.getGenre()));
         }
         book.setIsbn(dto.getIsbn());
         book.setAvailable(dto.isAvailable());
@@ -72,19 +72,18 @@ public class BookService {
     }
 
     public List<GenreCountDto> getGenresAvailable() {
-        List<Book> books = bookRepository.findAll();
-        Map<String, Long> countByGenre = new HashMap<>();
+        return bookRepository.findAvailableCountByGenre();
+    }
 
-        for (Book book : books) {
-            String genreName = book.getGenre().name();
-            countByGenre.put(genreName, countByGenre.getOrDefault(genreName, 0L) + 1);
+    private Genre parseGenre(String genre) {
+        String normalizedGenre = normalizeText(genre);
+        return normalizedGenre == null ? null : Genre.valueOf(normalizedGenre.toUpperCase());
+    }
+
+    private String normalizeText(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
         }
-
-        List<GenreCountDto> result = new ArrayList<>();
-        for (Map.Entry<String, Long> entry : countByGenre.entrySet()) {
-            result.add(new GenreCountDto(entry.getKey(), entry.getValue()));
-        }
-
-        return result;
+        return value.trim();
     }
 }

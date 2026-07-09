@@ -19,10 +19,10 @@ public class LectorService {
 
     public Lector registerLector(LectorRequestDto dto) {
         Lector lector = new Lector();
-        lector.setName(dto.getName().toLowerCase());
-        lector.setLastname(dto.getLastname().toLowerCase());
+        lector.setName(dto.getName().trim().toLowerCase());
+        lector.setLastname(dto.getLastname().trim().toLowerCase());
         lector.setDui(dto.getDui());
-        lector.setEmail(dto.getName().toLowerCase() + "." + dto.getLastname().toLowerCase() + "@library.com");
+        lector.setEmail(buildEmail(dto.getName(), dto.getLastname()));
         lector.setActive(true);
         return lectorRepository.save(lector);
     }
@@ -32,12 +32,17 @@ public class LectorService {
                 .orElseThrow(() -> new RuntimeException("Lector not found"));
     }
 
+    public List<Lector> getAllLectors() {
+        return lectorRepository.findAll();
+    }
+
     public Lector updateLector(UUID id, LectorRequestDto dto) {
         Lector lector = lectorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lector not found"));
-        lector.setName(dto.getName());
-        lector.setLastname(dto.getLastname());
+        lector.setName(dto.getName().trim().toLowerCase());
+        lector.setLastname(dto.getLastname().trim().toLowerCase());
         lector.setDui(dto.getDui());
+        lector.setEmail(buildEmail(dto.getName(), dto.getLastname()));
         return lectorRepository.save(lector);
     }
 
@@ -46,5 +51,11 @@ public class LectorService {
                 .orElseThrow(() -> new RuntimeException("Lector not found"));
         lector.setActive(false);
         lectorRepository.save(lector);
+    }
+
+    private String buildEmail(String name, String lastname) {
+        String normalizedName = name.trim().toLowerCase().replace(" ", "");
+        String normalizedLastname = lastname.trim().toLowerCase().replace(" ", "");
+        return normalizedName + "." + normalizedLastname + "@library.com";
     }
 }

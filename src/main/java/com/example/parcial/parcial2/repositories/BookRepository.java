@@ -2,7 +2,9 @@ package com.example.parcial.parcial2.repositories;
 
 import com.example.parcial.parcial2.domain.entities.Book;
 import com.example.parcial.parcial2.domain.entities.Genre;
+import com.example.parcial.parcial2.domain.dtos.GenreCountDto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,5 +20,13 @@ public interface BookRepository extends JpaRepository<Book, UUID> {
 
     List<Book> findByGenre(Genre genre);
 
-    List<Book> findByAuthorAndGenre(String author, String genre);
+    List<Book> findByAuthorAndGenre(String author, Genre genre);
+
+    @Query("""
+            select new com.example.parcial.parcial2.domain.dtos.GenreCountDto(b.genre, sum(b.availableCount))
+            from Book b
+            where b.available = true and b.genre is not null
+            group by b.genre
+            """)
+    List<GenreCountDto> findAvailableCountByGenre();
 }

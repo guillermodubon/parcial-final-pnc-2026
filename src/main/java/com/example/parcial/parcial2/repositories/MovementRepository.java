@@ -4,8 +4,11 @@ import com.example.parcial.parcial2.domain.entities.Movement;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface MovementRepository extends JpaRepository<Movement, UUID> {
+
+    List<Movement> findByLectorIdAndBookIdOrderByTimestampDesc(UUID lectorId, UUID bookId);
 }

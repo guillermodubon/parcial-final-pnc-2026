@@ -37,9 +37,13 @@ public class BookController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Book>> getAllBooks(
+    public ResponseEntity<?> getAllBooks(
+            @RequestParam(required = false) UUID id,
             @RequestParam(required = false) String author,
             @RequestParam(required = false) String genre) {
+        if (id != null) {
+            return ResponseEntity.ok(bookService.getBookById(id));
+        }
         return ResponseEntity.ok(bookService.getAllBooks(author, genre));
     }
 
